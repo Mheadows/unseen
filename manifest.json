@@ -1,0 +1,78 @@
+{
+  "manifest_version": 3,
+  "name": "Stay Unseen - IG & FB Seen Blocker",
+  "version": "1.0.6",
+  "description": "Stops Instagram and Facebook from marking your story views and DMs as seen, and hides your typing indicator. Per-feature toggles.",
+  "permissions": [
+    "storage",
+    "scripting",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://*.instagram.com/*",
+    "*://instagram.com/*",
+    "*://*.facebook.com/*",
+    "*://facebook.com/*",
+    "*://*.messenger.com/*",
+    "*://messenger.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.instagram.com/*", "*://instagram.com/*"],
+      "js": ["content/instagram.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "*://*.facebook.com/*",
+        "*://facebook.com/*",
+        "*://*.messenger.com/*",
+        "*://messenger.com/*"
+      ],
+      "js": ["content/facebook.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "*://*.instagram.com/*",
+        "*://instagram.com/*",
+        "*://*.facebook.com/*",
+        "*://facebook.com/*",
+        "*://*.messenger.com/*",
+        "*://messenger.com/*"
+      ],
+      "js": ["content/keep-unread.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content/instagram-inject.js", "content/facebook-inject.js"],
+      "matches": [
+        "*://*.instagram.com/*",
+        "*://*.facebook.com/*",
+        "*://*.messenger.com/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Stay Unseen",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
