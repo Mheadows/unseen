@@ -1,0 +1,398 @@
+:root {
+  color-scheme: light dark;
+
+  /* Brand ramp sampled from the extension icon, left to right across the shield:
+     the steel of the badge circle, the shield's blue half, the periwinkle of the
+     frame, then the shield's purple half. Each is lifted about 10% in lightness
+     from the source pixel -- the artwork's own values are mid-tone and vanish
+     into a 2px rule. These four stay fixed across both schemes: artwork, not
+     theme. */
+  --brand-steel: #7a9ab8;
+  --brand-indigo: #526fad;
+  --brand-periwinkle: #7e88b4;
+  --brand-violet: #8877c5;
+  --brand-gradient: linear-gradient(
+    135deg,
+    var(--brand-steel) 0%,
+    var(--brand-indigo) 38%,
+    var(--brand-periwinkle) 68%,
+    var(--brand-violet) 100%
+  );
+
+  /* Neutrals carry the icon's slate-indigo cast so they sit under the ramp
+     rather than fighting it -- a neutral grey reads as a second hue next to it. */
+  --bg: #101319;
+  --panel: #171c26;
+  --panel2: #202631;
+  --line: #2c3344;
+  --text: #edeff7;
+  --muted: #9ba2b5;
+
+  /* Accent is the icon's periwinkle, lightened until it clears 4.5:1 on both
+     --panel and --accent-weak (.fcount pairs them). */
+  --accent: #9cafec;
+  --accent-weak: #1d2449;
+  --good: #34d399;
+  --warn: #fb923c;
+
+  --radius: 10px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f6fa;
+    --panel: #ffffff;
+    --panel2: #f1f2f9;
+    --line: #dee2ed;
+    --text: #161922;
+    --muted: #5e6478;
+    --accent: #3143b9;
+    --accent-weak: #e5e9fa;
+    /* --good and --warn need their own light values: the dark ones are tuned
+       for a near-black panel and drop under 4:1 against white. */
+    --good: #047857;
+    --warn: #c2410c;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+body.popup { width: 372px; }
+
+.sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- bars ---------------------------------------------------------------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.footer {
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  justify-content: flex-start;
+}
+
+/* The top bar trades the flat rule for the icon's own gradient, so the ramp
+   reads across the whole header instead of only inside the 30px mark. */
+header.bar {
+  position: relative;
+  border-bottom: 0;
+}
+
+header.bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--brand-gradient);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+/* The real extension icon, not a redrawn copy. The art carries its own rounded
+   square with transparent corners, so it gets no background and no
+   border-radius -- either one would show through or clip into the corners. */
+.mark {
+  display: block;
+  width: 30px; height: 30px;
+  flex: none;
+}
+
+.brandtext { min-width: 0; }
+
+h1 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+
+h2.sectionhead {
+  margin: 14px 14px 6px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.status { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); }
+.status.on { color: var(--good); }
+.status.off { color: var(--warn); }
+
+/* --- switch -------------------------------------------------------------- */
+
+.switch { display: inline-flex; align-items: center; cursor: pointer; flex: none; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.track {
+  position: relative;
+  display: block;
+  width: 40px; height: 22px;
+  border-radius: 999px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  transition: background .16s ease, border-color .16s ease;
+}
+
+.knob {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform .16s ease, background .16s ease;
+}
+
+.switch input:checked + .track { background: var(--accent-weak); border-color: var(--accent); }
+.switch input:checked + .track .knob { transform: translateX(18px); background: var(--accent); }
+.switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch input:disabled + .track { opacity: .45; cursor: not-allowed; }
+
+/* --- tiles --------------------------------------------------------------- */
+
+.tiles {
+  display: grid;
+  /* Four tiles in a 372px popup. The horizontal padding on .tile drops with
+     the column width so the labels still get a usable text column. */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 9px;
+  background: var(--panel);
+  /* 1fr tracks refuse to shrink below their content otherwise, which pushes
+     the last tile past the popup edge. */
+  min-width: 0;
+}
+
+.tilenum { font-size: 20px; font-weight: 680; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.tilelabel { font-size: 10.5px; color: var(--muted); line-height: 1.25; }
+
+/* --- feature rows -------------------------------------------------------- */
+
+.features { list-style: none; margin: 0; padding: 0 8px; }
+
+.feature {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 6px;
+  border-radius: var(--radius);
+}
+
+.feature + .feature { border-top: 1px solid var(--line); border-radius: 0; }
+.feature:hover { background: var(--panel2); }
+
+.fname { display: flex; align-items: baseline; gap: 7px; font-weight: 560; }
+
+.fcount {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  background: var(--accent-weak);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.fcount.zero { color: var(--muted); background: var(--panel2); }
+.fhint { margin: 3px 0 0; font-size: 11px; line-height: 1.35; color: var(--muted); }
+.feature.off .fname, .feature.off .fhint { opacity: .55; }
+
+/* --- drawers ------------------------------------------------------------- */
+
+.drawer { margin: 12px 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.drawer:last-of-type { margin-bottom: 14px; }
+
+.drawer summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.drawer summary::-webkit-details-marker { display: none; }
+.drawer summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.pill {
+  font-size: 10px;
+  letter-spacing: 0;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.pill.ok { color: var(--good); border-color: var(--good); }
+.pill.warn { color: var(--warn); border-color: var(--warn); }
+
+/* --- status rows --------------------------------------------------------- */
+
+.stats { list-style: none; margin: 9px 0 6px; padding: 0; font-size: 11.5px; }
+
+.stats li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+.stats li:last-child { border-bottom: 0; }
+.stats b { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.stats b.ok { color: var(--good); }
+.stats b.warn { color: var(--warn); }
+
+/* --- logs ---------------------------------------------------------------- */
+
+.log {
+  list-style: none;
+  margin: 9px 0 6px;
+  padding: 0;
+  max-height: 190px;
+  overflow-y: auto;
+  font-size: 11px;
+}
+
+.log.tall { max-height: 240px; }
+
+.log li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+.log li:last-child { border-bottom: 0; }
+.log li.empty { display: block; padding: 10px 0; font-style: italic; }
+.log time { font-variant-numeric: tabular-nums; }
+.log .what { color: var(--text); overflow-wrap: anywhere; min-width: 0; }
+.log .tag { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; }
+.log .tag.blocked { color: var(--good); }
+.log .tag.seen { color: var(--accent); }
+.log .tag.frame { color: var(--warn); }
+.log .meta { margin-top: 2px; color: var(--muted); overflow-wrap: anywhere; }
+
+.log .body {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* --- "is it running here?" line ------------------------------------------ */
+
+.diag {
+  margin: 0;
+  padding: 7px 14px;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  background: var(--panel2);
+  border-bottom: 1px solid var(--line);
+}
+
+.diag.warn { color: var(--warn); }
+
+/* --- diagnostics toggle -------------------------------------------------- */
+
+/* Same margins as .drawer so the button sits on the drawer rhythm whether the
+   lists below it are open or closed. */
+.diagbar { margin: 12px 14px; }
+
+.diagbar .btn {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.diagbar .btn:hover { color: var(--text); }
+
+/* --- buttons ------------------------------------------------------------- */
+
+.btn {
+  font: inherit;
+  font-weight: 560;
+  color: var(--text);
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.ghost { background: transparent; }
+
+.link {
+  font: inherit;
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+footer.note {
+  padding: 0 14px 12px;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+}

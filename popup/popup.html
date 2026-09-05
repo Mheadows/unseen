@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stay Unseen</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body class="popup">
+  <header class="bar">
+    <div class="brand">
+      <img class="mark" src="../icons/icon128.png" alt="" width="30" height="30" />
+      <div class="brandtext">
+        <h1>Stay Unseen</h1>
+        <p id="status" class="status">Loading…</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="tiles" aria-label="Blocked counters">
+    <div class="tile">
+      <span class="tilenum" id="total" aria-live="polite">0</span>
+      <span class="tilelabel">blocked all time</span>
+    </div>
+    <div class="tile">
+      <span class="tilenum" id="statStories" aria-live="polite">0</span>
+      <span class="tilelabel">story views</span>
+    </div>
+    <div class="tile">
+      <span class="tilenum" id="statMessages" aria-live="polite">0</span>
+      <span class="tilelabel">read receipts</span>
+    </div>
+    <div class="tile">
+      <span class="tilenum" id="statTyping" aria-live="polite">0</span>
+      <span class="tilelabel">typing signals</span>
+    </div>
+  </section>
+
+  <p class="diag" id="diag" aria-live="polite" hidden></p>
+
+  <main>
+    <h2 class="sectionhead">Features</h2>
+    <ul class="features" id="features"></ul>
+
+    <h2 class="sectionhead">Display</h2>
+    <ul class="features" id="options"></ul>
+
+    <details class="drawer" id="statusDrawer">
+      <summary>
+        <span>Status</span>
+        <span class="pill" id="sitePill">none</span>
+      </summary>
+      <ul class="stats">
+        <li><span>Network blocking</span><b id="network" class="ok">active</b></li>
+        <li><span>IG page patch</span><b id="d-instagram_stories">not detected</b></li>
+        <li><span>IG DM patch</span><b id="d-instagram_messages">not detected</b></li>
+        <li><span>IG typing patch</span><b id="d-instagram_typing">not detected</b></li>
+        <li><span>FB page patch</span><b id="d-facebook_stories">not detected</b></li>
+        <li><span>Messenger patch</span><b id="d-facebook_messages">not detected</b></li>
+        <li><span>Messenger typing patch</span><b id="d-facebook_typing">not detected</b></li>
+        <li><span>Keep-unread marker</span><b id="d-ui_marker">not detected</b></li>
+        <li><span>Site loaded with ext</span><b id="site">none</b></li>
+      </ul>
+      <button type="button" class="link" id="refresh">Refresh status</button>
+    </details>
+
+    <div class="diagbar">
+      <button
+        type="button"
+        class="btn ghost"
+        id="diagToggle"
+        aria-expanded="false"
+        aria-controls="diagnostics"
+      >Show diagnostics</button>
+      <button
+        type="button"
+        class="btn ghost"
+        id="copyDiag"
+        title="Copy all diagnostic data as text, for bug reports"
+      >Copy diagnostics</button>
+    </div>
+
+    <!-- Verification lists. Hidden by default: useful when checking whether a
+         signal was actually caught, noise the rest of the time. -->
+    <div id="diagnostics" hidden>
+      <details class="drawer" id="recentDrawer">
+        <summary>
+          <span>Recent blocks</span>
+          <span class="pill" id="recentCount">0</span>
+        </summary>
+        <ul class="log" id="recent"></ul>
+        <p class="hint">
+          One thing you do trips several suppressions at once, so they count as a
+          single block — "3 signals" means three were stopped for it. The Status
+          drawer counts every signal separately.
+        </p>
+      </details>
+
+      <details class="drawer" id="capturedDrawer">
+        <summary>
+          <span>Seen signals detected</span>
+          <span class="pill" id="capturedCount">0</span>
+        </summary>
+        <ul class="log tall" id="captured"></ul>
+        <p class="hint">
+          Requests that look like seen/read signals. If one is missing here,
+          the signal is sent another way (likely websocket) and cannot be blocked.
+        </p>
+      </details>
+
+      <details class="drawer" id="wsDrawer">
+        <summary>
+          <span>WebSocket frames</span>
+          <span class="pill" id="wsCount">0</span>
+        </summary>
+        <ul class="log" id="wscaptured"></ul>
+        <p class="hint">
+          Outgoing read/seen and typing frames (markThreadAsRead, read_watermark,
+          story_seen, indicate_activity, etc.) are dropped. This list is for
+          verification.
+        </p>
+      </details>
+
+      <details class="drawer" id="bridgeDrawer">
+        <summary>
+          <span>Worker bridge frames</span>
+          <span class="pill" id="bridgeCount">0</span>
+        </summary>
+        <ul class="log" id="bridgecaptured"></ul>
+        <p class="hint">
+          Traffic posted to the chat worker (the MQTT/LightSpeed socket on
+          Chrome), tagged with what the patch did: forwarded, dropped, or
+          stripped. Send a group message, then read here — this is the list
+          that shows where a read receipt hid.
+        </p>
+      </details>
+
+      <details class="drawer" id="ignetDrawer">
+        <summary>
+          <span>IG network log</span>
+          <span class="pill" id="ignetCount">0</span>
+        </summary>
+        <ul class="log" id="ignet"></ul>
+        <p class="hint">
+          Last POSTs / seen-like requests on Instagram, captured at the network
+          layer (Firefox only — Chrome does not expose request bodies to the
+          background page). View a story, then check here for the seen request.
+        </p>
+      </details>
+
+      <details class="drawer" id="probeDrawer">
+        <summary>
+          <span>Seen/read modules</span>
+          <span class="pill" id="probeCount">0</span>
+        </summary>
+        <ul class="log" id="probes"></ul>
+        <p class="hint">
+          Modules that look like a seen/read write, tagged with how the patch
+          classified them. "no match" means it slipped through — Meta renames
+          these, so if a ring or badge starts clearing again the new name is most
+          likely there. A tagged one that shouldn't be tagged is what to check if
+          something stops loading.
+        </p>
+      </details>
+    </div>
+  </main>
+
+  <footer class="bar footer">
+    <button type="button" class="btn" id="reset">Reset counters</button>
+  </footer>
+
+  <footer class="note" id="version"></footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
